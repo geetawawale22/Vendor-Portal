@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="mb-4">
+    <h2 class="mb-1">Update Dispatch Status</h2>
+    <p class="text-muted mb-0">Shipment: <strong>{{ dispatch.shipment_number or 'Not Confirmed' }}</strong></p>
+</div>
+
+<form method="post" class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Shipment Status</label>
+                <select class="form-select" name="status" required>
+                    {% for s in statuses %}
+                        <option value="{{ s }}" {% if dispatch.status == s %}selected{% endif %}>{{ s }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Estimated Arrival Time</label>
+                <input type="datetime-local" class="form-control" name="estimated_arrival_time" value="{{ dispatch.estimated_arrival_time.strftime('%Y-%m-%dT%H:%M') if dispatch.estimated_arrival_time else '' }}">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Current Location</label>
+                <input class="form-control" name="current_location" value="{{ dispatch.current_location or '' }}">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Delay Reason</label>
+                <input class="form-control" name="delay_reason" value="{{ dispatch.delay_reason or '' }}">
+            </div>
+            <div class="col-12">
+                <label class="form-label">Driver Remarks</label>
+                <textarea class="form-control" name="driver_remarks" rows="3">{{ dispatch.driver_remarks or '' }}</textarea>
+            </div>
+        </div>
+        <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Update Status</button>
+            <a href="{{ url_for('dispatch.view_dispatch', dispatch_id=dispatch.id) }}" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+    </div>
+</form>
+{% endblock %}

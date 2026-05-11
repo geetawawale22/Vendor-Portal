@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="mb-4">
+    <h2 class="mb-1">Upload Delivery Challan</h2>
+    <p class="text-muted mb-0">Shipment: <strong>{{ dispatch.shipment_number or 'Not Confirmed' }}</strong></p>
+</div>
+
+<form method="post" enctype="multipart/form-data" class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Delivery Challan (PDF/JPG/PNG)</label>
+                <input class="form-control" type="file" name="delivery_challan" accept=".pdf,.jpg,.jpeg,.png">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Signed Invoice (PDF/JPG/PNG)</label>
+                <input class="form-control" type="file" name="signed_invoice" accept=".pdf,.jpg,.jpeg,.png">
+            </div>
+        </div>
+        <div class="mt-4 d-flex gap-2">
+            <button class="btn btn-primary" type="submit">Upload Files</button>
+            <a href="{{ url_for('dispatch.view_dispatch', dispatch_id=dispatch.id) }}" class="btn btn-outline-secondary">Back</a>
+        </div>
+    </div>
+</form>
+{% endblock %}

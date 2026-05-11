@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="mb-4">
+    <h2 class="mb-1">Reports</h2>
+    <p class="text-muted mb-0">Dispatch, delivery, ASN, and vehicle usage reports</p>
+</div>
+
+<form method="get" class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-2">
+                <label class="form-label">Date From</label>
+                <input type="date" class="form-control" name="date_from" value="{{ filters.date_from }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Date To</label>
+                <input type="date" class="form-control" name="date_to" value="{{ filters.date_to }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Vehicle Number</label>
+                <input class="form-control" name="vehicle_number" value="{{ filters.vehicle_number }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">ASN Number</label>
+                <input class="form-control" name="asn_number" value="{{ filters.asn_number }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Vendor Name</label>
+                <input class="form-control" name="vendor_name" value="{{ filters.vendor_name }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Shipment Status</label>
+                <select class="form-select" name="status">
+                    <option value="">All</option>
+                    <option value="CREATED" {% if filters.status == 'CREATED' %}selected{% endif %}>CREATED</option>
+                    <option value="INTRANSIT" {% if filters.status == 'INTRANSIT' %}selected{% endif %}>INTRANSIT</option>
+                    <option value="DELAYED" {% if filters.status == 'DELAYED' %}selected{% endif %}>DELAYED</option>
+                    <option value="ARRIVED" {% if filters.status == 'ARRIVED' %}selected{% endif %}>ARRIVED</option>
+                    <option value="DELIVERED" {% if filters.status == 'DELIVERED' %}selected{% endif %}>DELIVERED</option>
+                </select>
+            </div>
+            <div class="col-12">
+                <button class="btn btn-primary" type="submit">Apply Filters</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <h5>Dispatch Report</h5>
+        <div class="table-responsive mt-3">
+            <table class="table table-sm table-hover align-middle">
+                <thead><tr><th>Shipment</th><th>Vendor</th><th>Vehicle</th><th>Status</th><th>Created</th></tr></thead>
+                <tbody>
+                {% for d in dispatch_report %}
+                    <tr>
+                        <td>{{ d.shipment_number or 'Not Confirmed' }}</td>
+                        <td>{{ d.vendor_name }}</td>
+                        <td>{{ d.vehicle_number }}</td>
+                        <td>{{ d.status }}</td>
+                        <td>{{ d.created_at.strftime('%d-%m-%Y') }}</td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="5" class="text-center text-muted">No data.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <h5>Delivery Report</h5>
+        <div class="table-responsive mt-3">
+            <table class="table table-sm table-hover align-middle">
+                <thead><tr><th>Shipment</th><th>Vendor</th><th>Vehicle</th><th>Delivered At</th></tr></thead>
+                <tbody>
+                {% for d in delivery_report %}
+                    <tr>
+                        <td>{{ d.shipment_number or 'Not Confirmed' }}</td>
+                        <td>{{ d.vendor_name }}</td>
+                        <td>{{ d.vehicle_number }}</td>
+                        <td>{{ d.delivered_at.strftime('%d-%m-%Y %H:%M') if d.delivered_at else '-' }}</td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="4" class="text-center text-muted">No delivered records.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <h5>ASN Report</h5>
+        <div class="table-responsive mt-3">
+            <table class="table table-sm table-hover align-middle">
+                <thead><tr><th>ASN Number</th><th>Invoice Number</th><th>Shipment</th><th>Vehicle</th><th>Qty</th></tr></thead>
+                <tbody>
+                {% for a in asn_report %}
+                    <tr>
+                        <td>{{ a.asn_number }}</td>
+                        <td>{{ a.invoice_number }}</td>
+                        <td>{{ a.dispatch.shipment_number or 'Not Confirmed' }}</td>
+                        <td>{{ a.dispatch.vehicle_number }}</td>
+                        <td>{{ a.quantity }} {{ a.unit }}</td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="5" class="text-center text-muted">No ASN records.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        <h5>Vehicle Usage Report</h5>
+        <div class="table-responsive mt-3">
+            <table class="table table-sm table-hover align-middle">
+                <thead><tr><th>Vehicle Number</th><th>Total Trips</th><th>Total Quantity</th></tr></thead>
+                <tbody>
+                {% for v in vehicle_usage_report %}
+                    <tr>
+                        <td>{{ v.vehicle_number }}</td>
+                        <td>{{ v.total_trips }}</td>
+                        <td>{{ '%.2f'|format(v.total_quantity or 0) }}</td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="3" class="text-center text-muted">No vehicle usage data.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% set status_theme = {
+    'CREATED': 'status-created',
+    'INTRANSIT': 'status-intransit',
+    'DELAYED': 'status-delayed',
+    'ARRIVED': 'status-arrived',
+    'DELIVERED': 'status-delivered'
+} %}
+
+<div class="dispatch-hero mb-4">
+    <div>
+        <div class="dispatch-kicker">Shipment Details</div>
+        <h2 class="mb-2">{{ dispatch.shipment_number or 'Pending Confirmation' }}</h2>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <span class="status-pill {{ status_theme.get(dispatch.status, 'status-created') }}">{{ dispatch.status }}</span>
+            <span class="text-muted small">Created {{ dispatch.created_at.strftime('%d-%m-%Y %H:%M') }}</span>
+            <span class="text-muted small">Vendor {{ dispatch.vendor_name }}</span>
+        </div>
+    </div>
+    <div class="d-flex gap-2 mt-3 mt-lg-0 flex-wrap">
+        <a href="{{ url_for('dispatch.update_dispatch_status', dispatch_id=dispatch.id) }}" class="btn btn-outline-primary">Update Status</a>
+        <a href="{{ url_for('dispatch.upload_delivery', dispatch_id=dispatch.id) }}" class="btn btn-outline-secondary">Upload Delivery Challan</a>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6 col-xl-3">
+        <div class="dispatch-stat-card">
+            <div class="dispatch-stat-label">Vehicle</div>
+            <div class="dispatch-stat-value">{{ dispatch.vehicle_number }}</div>
+            <div class="dispatch-stat-meta">{{ dispatch.vehicle_type }} | {{ dispatch.transporter_name }}</div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="dispatch-stat-card">
+            <div class="dispatch-stat-label">Driver</div>
+            <div class="dispatch-stat-value">{{ dispatch.driver_name }}</div>
+            <div class="dispatch-stat-meta">{{ dispatch.driver_mobile }}</div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="dispatch-stat-card">
+            <div class="dispatch-stat-label">Material Qty</div>
+            <div class="dispatch-stat-value">{{ ("{:,.2f}".format(dispatch.quantity)).rstrip("0").rstrip(".") }} {{ dispatch.unit }}</div>
+            <div class="dispatch-stat-meta">{{ dispatch.material_type }}</div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="dispatch-stat-card dispatch-stat-card--accent">
+            <div class="dispatch-stat-label">Total Cost</div>
+            <div class="dispatch-stat-value">{{ ("{:,.2f}".format(dispatch.total_cost)).rstrip("0").rstrip(".") }}</div>
+            <div class="dispatch-stat-meta">{{ dispatch.billing_type }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+                <div class="section-heading-row mb-3">
+                    <h5 class="mb-0">Dispatch Summary</h5>
+                    <span class="text-muted small">Operational and billing information</span>
+                </div>
+                <div class="details-grid">
+                    <div class="detail-item"><span>Vendor</span><strong>{{ dispatch.vendor_name }}</strong></div>
+                    <div class="detail-item"><span>Current Location</span><strong>{{ dispatch.current_location or '-' }}</strong></div>
+                    <div class="detail-item"><span>Vehicle Number</span><strong>{{ dispatch.vehicle_number }}</strong></div>
+                    <div class="detail-item"><span>ETA</span><strong>{{ dispatch.estimated_arrival_time.strftime('%d-%m-%Y %H:%M') if dispatch.estimated_arrival_time else '-' }}</strong></div>
+                    <div class="detail-item"><span>Empty Weight</span><strong>{{ dispatch.empty_vehicle_weight }} {{ dispatch.empty_vehicle_weight_unit }}</strong></div>
+                    <div class="detail-item"><span>Loaded Weight</span><strong>{{ dispatch.loaded_vehicle_weight }} {{ dispatch.loaded_vehicle_weight_unit }}</strong></div>
+                    <div class="detail-item"><span>Net Weight</span><strong>{{ ("{:,.2f}".format(dispatch.net_material_weight)).rstrip("0").rstrip(".") }} KG</strong></div>
+                    <div class="detail-item"><span>Vehicle Capacity</span><strong>{{ dispatch.vehicle_capacity }} {{ dispatch.vehicle_capacity_unit }}</strong></div>
+                    <div class="detail-item"><span>Rate Amount</span><strong>{{ ("{:,.2f}".format(dispatch.rate_amount)).rstrip("0").rstrip(".") }}</strong></div>
+                    <div class="detail-item"><span>Delivered At</span><strong>{{ dispatch.delivered_at.strftime('%d-%m-%Y %H:%M') if dispatch.delivered_at else '-' }}</strong></div>
+                </div>
+
+                <div class="remarks-panel mt-4">
+                    <div class="remarks-title">Driver Remarks</div>
+                    <div class="remarks-body">{{ dispatch.driver_remarks or 'No driver remarks added.' }}</div>
+                    {% if dispatch.delay_reason %}
+                    <div class="remarks-title mt-3">Delay Reason</div>
+                    <div class="remarks-body">{{ dispatch.delay_reason }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body p-4">
+                <div class="section-heading-row mb-3">
+                    <h5 class="mb-0">Actions</h5>
+                    <span class="text-muted small">Shipment lifecycle</span>
+                </div>
+                <div class="d-grid gap-2">
+                    {% if dispatch.status == 'CREATED' %}
+                    <form method="post" action="{{ url_for('dispatch.confirm_dispatch', dispatch_id=dispatch.id) }}">
+                        <button class="btn btn-primary w-100" type="submit">Confirm Dispatch</button>
+                    </form>
+                    {% endif %}
+
+                    {% if dispatch.status != 'DELIVERED' %}
+                    <form method="post" action="{{ url_for('dispatch.confirm_delivery', dispatch_id=dispatch.id) }}">
+                        <button class="btn btn-success w-100" type="submit">Confirm Delivery</button>
+                    </form>
+                    {% else %}
+                    <button class="btn btn-success w-100" type="button" disabled>Delivery Confirmed</button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+                <div class="section-heading-row mb-3">
+                    <h5 class="mb-0">Documents</h5>
+                    <span class="text-muted small">Upload status</span>
+                </div>
+                <div class="document-list">
+                    <div class="document-item">
+                        <span>Invoice</span>
+                        <strong>{{ 'Uploaded' if dispatch.invoice_file else 'Not Uploaded' }}</strong>
+                    </div>
+                    <div class="document-item">
+                        <span>ASN File</span>
+                        <strong>{{ 'Uploaded' if dispatch.asn_file else 'Not Uploaded' }}</strong>
+                    </div>
+                    <div class="document-item">
+                        <span>Delivery Challan</span>
+                        <strong>{{ 'Uploaded' if dispatch.delivery_challan_file else 'Not Uploaded' }}</strong>
+                    </div>
+                    <div class="document-item">
+                        <span>Signed Invoice</span>
+                        <strong>{{ 'Uploaded' if dispatch.signed_invoice_file else 'Not Uploaded' }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4">
+        <div class="section-heading-row mb-3">
+            <h5 class="mb-0">ASN Entries</h5>
+            <span class="text-muted small">{{ dispatch.asn_entries|length }} records</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm align-middle dispatch-table">
+                <thead>
+                    <tr>
+                        <th>ASN No</th>
+                        <th>Invoice</th>
+                        <th>Material</th>
+                        <th>Qty</th>
+                        <th>Unit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for a in dispatch.asn_entries %}
+                    <tr>
+                        <td>{{ a.asn_number }}</td>
+                        <td>{{ a.invoice_number }}</td>
+                        <td>{{ a.material_type }}</td>
+                        <td>{{ ("{:,.2f}".format(a.quantity)).rstrip("0").rstrip(".") }}</td>
+                        <td>{{ a.unit }}</td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="5" class="text-center text-muted">No ASN entries found.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+        <div class="section-heading-row mb-3">
+            <h5 class="mb-0">Status History</h5>
+            <span class="text-muted small">Latest updates first</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm align-middle dispatch-table">
+                <thead>
+                    <tr>
+                        <th>Updated At</th>
+                        <th>Status</th>
+                        <th>Location</th>
+                        <th>Driver Remarks</th>
+                        <th>Delay Reason</th>
+                        <th>ETA</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for log in dispatch.status_logs|sort(attribute='updated_at', reverse=true) %}
+                    <tr>
+                        <td>{{ log.updated_at.strftime('%d-%m-%Y %H:%M') }}</td>
+                        <td><span class="status-pill {{ status_theme.get(log.status, 'status-created') }}">{{ log.status }}</span></td>
+                        <td>{{ log.current_location or '-' }}</td>
+                        <td>{{ log.driver_remarks or '-' }}</td>
+                        <td>{{ log.delay_reason or '-' }}</td>
+                        <td>{{ log.estimated_arrival_time.strftime('%d-%m-%Y %H:%M') if log.estimated_arrival_time else '-' }}</td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="6" class="text-center text-muted">No status updates available.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
