@@ -35,16 +35,14 @@ const STATUS_LABELS = {
 const STATUS_COLORS = {
   CREATED: 'badge-orange',
   INTRANSIT: 'badge-purple',
-  ARRIVED: 'badge-blue',
   DELIVERED: 'badge-green',
   DELAYED: 'badge-red',
   REJECTED: 'badge-dark',
 };
 const NEXT_STATUSES = {
   CREATED: ['INTRANSIT'],
-  INTRANSIT: ['ARRIVED', 'DELAYED', 'DELIVERED', 'REJECTED'],
-  ARRIVED: ['DELIVERED', 'DELAYED', 'REJECTED'],
-  DELAYED: ['INTRANSIT', 'ARRIVED', 'DELIVERED', 'REJECTED'],
+  INTRANSIT: ['DELAYED', 'DELIVERED', 'REJECTED'],
+  DELAYED: ['INTRANSIT', 'DELIVERED', 'REJECTED'],
   DELIVERED: [],
   REJECTED: [],
 };
@@ -844,7 +842,7 @@ function DispatchDetailPage() {
         <Btn variant="ghost" icon="arrowLeft" onClick={() => navigate(-1)}>Back</Btn>
         {dispatch.status === 'CREATED' && <Btn variant="ghost" onClick={() => navigate(`/dispatches/${id}/edit`)}>Edit</Btn>}
         {dispatch.status === 'CREATED' && <Btn variant="success" icon="check" onClick={() => action(`/api/dispatches/${id}/confirm`, 'Failed to confirm dispatch.')}>Confirm</Btn>}
-        {['INTRANSIT', 'ARRIVED', 'DELAYED'].includes(dispatch.status) && dispatch.hasDeliveryProof && <Btn variant="success" onClick={() => action(`/api/dispatches/${id}/confirm-delivery`, 'Failed to confirm delivery.')}>Confirm Delivery</Btn>}
+        {['INTRANSIT', 'DELAYED'].includes(dispatch.status) && dispatch.hasDeliveryProof && <Btn variant="success" onClick={() => action(`/api/dispatches/${id}/confirm-delivery`, 'Failed to confirm delivery.')}>Confirm Delivery</Btn>}
       </PageHeader>
       {error && <Notice type="error">{error}</Notice>}
       <div className="detail-grid">
