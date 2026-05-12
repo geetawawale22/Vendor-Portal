@@ -17,6 +17,7 @@ venv/
 
 # Database and uploads
 *.db
+!dispatchflow.db
 uploads/
 
 # Frontend
